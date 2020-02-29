@@ -1,0 +1,2 @@
+encrypter encrypt hello_world.png
+encrypter decrypt encrypted
