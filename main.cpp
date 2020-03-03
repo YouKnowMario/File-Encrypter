@@ -46,6 +46,19 @@ void printHelp()
 // fileSize | fileData | the data of the file
 //
 
+void test(std::string filename)
+{
+	std::ifstream rf(filename, std::ios::binary);
+	if (!rf) {
+		std::cout << "Cannot open file!" << std::endl;
+		return;
+	}
+	rf.seekg(37, std::ios::beg);
+	unsigned te;
+	rf.read((char*)&te, sizeof(unsigned));
+	std::cout << te << std::endl;
+	rf.close();
+}
 
 void encryptFile(std::string input, std::string output, std::string password, const int& mode)
 {
@@ -71,32 +84,40 @@ void encryptFile(std::string input, std::string output, std::string password, co
 		wf.write((char*)&i, sizeof(unsigned)); // write the direcNameSize
 		wf.write(input.c_str(), i * sizeof(char)); // write the direcName
 	}
-	//std::cout << input.length() << input << std::endl;
 	if (output == "")
 		output = "encryptedFile";
-	
-	for (auto filename : files) // write the data
+	for (std::string filename : files) // write the data
 	{
-		std::ifstream rf(filename, std::ios::binary);
-		if (!rf) {
+		unsigned fileSize;
+		unsigned filenamelength;
+		std::ifstream rf(filename, std::ios::binary); // open the file to encrypt
+		if (!rf) { // check if exist
 			std::cout << "Cannot open file!" << std::endl;
 			return;
 		}
-		uintmax_t fileSize = std::filesystem::file_size(filename);
+		if (std::filesystem::file_size(filename) > 4294967295) // if file is more then 4 giga bytes
+		{
+			std::cout << "file is too big (only files up to 4 gb)" << std::endl;
+			return;
+		}
+		fileSize = std::filesystem::file_size(filename);
 		std::cout << fileSize << std::endl;
-		unsigned i = filename.length();
-		wf.write((char*)&i, sizeof(unsigned));
-		wf.write(filename.c_str(), i * sizeof(char));
-		wf.write((char*)&fileSize, sizeof(uintmax_t));
+		filenamelength = filename.length();
+		// write the data to the file
+		wf.write((char*)&filenamelength, sizeof(unsigned)); // write the length of the name
+		wf.write(filename.c_str(), filenamelength * sizeof(char)); // write the name
+		wf.write((char*)&fileSize, sizeof(unsigned)); // write the file size
+		// code for now (i will add encryption)
 		char temp;
-		while (rf.read(&temp, sizeof(char)))
+		while (rf.read(&temp, sizeof(char))) // write byte by byte to byte to the file
 		{
 			temp--;
 			wf.write(&temp, sizeof(char));
 		}
+		rf.close(); // close the file
 	}
 	
-	wf.close();
+	wf.close(); // closing the file
 	
 }
 
@@ -131,9 +152,16 @@ void decryptFile(std::string input, std::string output, std::string password, co
 	rf.close();
 
 }
+#ifdef _DEBUG // if debug
+int main()
+{
+	int argc = 5;
+	const char* argv[5] = { "encrypter", "-ed", "test", "lol", "dire" };
+#else 
 
 int main(int argc, char* argv[])
 {
+#endif
 
 	if (argc == 1)
 		printHelp();
