@@ -75,11 +75,16 @@ void encryptFile(std::string input, std::string output, std::string password, co
 {
 
 	if (output == "")
-		output = "encrypted" + input;
+		output = "e_" + input.substr(input.find_first_of('\\') + 1);
 	if (!ifExist(output.c_str()))
 		return;
 	std::ofstream wf(output, std::ios::binary); // open the output file for write
-
+	if (!wf)
+	{
+		std::cout << output << std::endl;
+		std::cout << "cant open file for writing" << std::endl;
+		return;
+	}
 	std::vector<std::string> files;
 	// fill the vector and write file header:
 	if (mode == 0 || mode == 1)
@@ -168,7 +173,8 @@ void encryptFile(std::string input, std::string output, std::string password, co
 		rf.close(); // close the file
 		
 	}
-
+	if (mode == 1 || mode == 3)
+		std::filesystem::remove_all(input);
 	wf.close(); // close the file
 }
 
@@ -282,8 +288,9 @@ clean:
 
 	rf.close();
 	delete[] format;
-	
-	return;
+	if (mode == 1)
+		std::filesystem::remove_all(input);
+
 
 }
 #ifdef _DEBUG // if debug
@@ -291,13 +298,17 @@ clean:
 int main()
 {
 	// tests:
-	int argc = 5;
-	//int argc = 4;
+	//int argc = 5;
+	int argc = 4;
 	//const char* argv[5] = { "encrypter", "-e", "tests\\hello_world.png", "goodPass4356", "e_hello_world.png" };
+	//const char* argv[4] = { "encrypter", "-e", "tests\\hello_world.png", "goodPass4356"};
+	//const char* argv[4] = { "encrypter", "-D", "e_hello_world.png", "goodPass4356"};
+	const char* argv[4] = { "encrypter", "-E", "hello_world.png", "goodPass4356" };
 	//const char* argv[5] = { "encrypter", "-d", "e_hello_world.png", "goodPass4356", "hello_world.png" };
 	//const char* argv[5] = { "encrypter", "-ed", "tests", "goodPass4356", "encryptedDir" };
 	//const char* argv[4] = { "encrypter", "-ed", "tests", "goodPass4356"};
-	const char* argv[5] = { "encrypter", "-d", "encryptedtests", "goodPass4356", "tests2" };
+	//const char* argv[5] = { "encrypter", "-d", "e_tests", "goodPass4356", "tests2" };
+	//const char* argv[5] = { "encrypter", "-D", "e_tests", "goodPass4356", "tests2" };
 	//const char* argv[4] = { "encrypter", "-d", "e_hello_world.png", "goodPass4356"};
 #else 
 
